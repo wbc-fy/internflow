@@ -33,3 +33,7 @@ class ApplicationResponse(BaseModel):
     status: str
     notes: Optional[str]
     created_at: str
+
+class ApplicationStatusUpdate(BaseModel):
+    status: str
+    notes: Optional[str] = None

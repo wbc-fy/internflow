@@ -1,8 +1,10 @@
-from typing import List
+from typing import List, Optional
 from app.database import get_connection
-from app.models.schemas import ApplicationCreate, ApplicationResponse
-
-
+from app.models.schemas import (
+    ApplicationCreate,
+    ApplicationResponse,
+    ApplicationStatusUpdate,
+)
 def create_application(data: ApplicationCreate) -> ApplicationResponse:
     conn = get_connection()
     cursor = conn.cursor()
@@ -47,3 +49,39 @@ def list_applications() -> List[ApplicationResponse]:
     conn.close()
 
     return [ApplicationResponse(**dict(row)) for row in rows]
+
+def update_application_status(
+    application_id: int,
+    data: ApplicationStatusUpdate
+) -> Optional[ApplicationResponse]:
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE applications
+        SET status = ?, notes = COALESCE(?, notes)
+        WHERE id = ?
+        """,
+        (
+            data.status,
+            data.notes,
+            application_id,
+        ),
+    )
+
+    conn.commit()
+
+    if cursor.rowcount == 0:
+        conn.close()
+        return None
+
+    cursor.execute(
+        "SELECT * FROM applications WHERE id = ?",
+        (application_id,),
+    )
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return ApplicationResponse(**dict(row))

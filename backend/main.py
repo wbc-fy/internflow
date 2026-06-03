@@ -1,15 +1,20 @@
 from typing import List
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from app.config import LLM_PROVIDER, OPENAI_API_KEY, ANTHROPIC_API_KEY
 from app.database import init_db
 from app.models.schemas import (
+    ApplicationStatusUpdate,
     AnalyzeRequest,
     AnalyzeResponse,
     ApplicationCreate,
     ApplicationResponse,
 )
 from app.services.analyzer import analyze_application
-from app.services.application_service import create_application, list_applications
+from app.services.application_service import (
+    create_application,
+    list_applications,
+    update_application_status,
+)
 app = FastAPI(title="InternFlow API")
 init_db()
 
@@ -40,3 +45,11 @@ def add_application(data: ApplicationCreate):
 @app.get("/api/applications", response_model=List[ApplicationResponse])
 def get_applications():
     return list_applications()
+@app.patch("/api/applications/{application_id}", response_model=ApplicationResponse)
+def update_application(application_id: int, data: ApplicationStatusUpdate):
+    updated_application = update_application_status(application_id, data)
+
+    if updated_application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    return updated_application
