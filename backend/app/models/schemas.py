@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List,Optional
 
 
 class AnalyzeRequest(BaseModel):
@@ -14,3 +14,22 @@ class AnalyzeResponse(BaseModel):
     missing_skills: List[str]
     resume_suggestions: List[str]
     email_draft: str
+
+
+
+class ApplicationCreate(BaseModel):
+    company: str
+    position: str
+    match_score: int
+    status: str = "准备中"
+    notes: Optional[str] = None
+
+
+class ApplicationResponse(BaseModel):
+    id: int
+    company: str
+    position: str
+    match_score: int
+    status: str
+    notes: Optional[str]
+    created_at: str
