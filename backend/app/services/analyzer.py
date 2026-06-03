@@ -1,19 +1,5 @@
 from app.models.schemas import AnalyzeRequest, AnalyzeResponse
-
-
-COMMON_SKILLS = [
-    "Python",
-    "FastAPI",
-    "SQL",
-    "MySQL",
-    "SQLite",
-    "Docker",
-    "Redis",
-    "Git",
-    "React",
-    "Java",
-    "Spring Boot",
-]
+from app.services.skills import get_all_skills
 
 
 def analyze_application(data: AnalyzeRequest) -> AnalyzeResponse:
@@ -23,7 +9,9 @@ def analyze_application(data: AnalyzeRequest) -> AnalyzeResponse:
     matched_skills = []
     missing_skills = []
 
-    for skill in COMMON_SKILLS:
+    all_skills = get_all_skills()
+
+    for skill in all_skills:
         skill_lower = skill.lower()
 
         if skill_lower in jd_text:
