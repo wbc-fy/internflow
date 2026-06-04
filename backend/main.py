@@ -15,6 +15,7 @@ from app.services.application_service import (
     list_applications,
     update_application_status,
 )
+from app.services.llm_client import get_llm_client
 app = FastAPI(title="InternFlow API")
 init_db()
 
@@ -53,3 +54,16 @@ def update_application(application_id: int, data: ApplicationStatusUpdate):
         raise HTTPException(status_code=404, detail="Application not found")
 
     return updated_application
+@app.get("/api/llm/test")
+def test_llm():
+    client = get_llm_client()
+
+    result = client.generate(
+        system_prompt="You are an internship application assistant.",
+        user_prompt="Say hello to InternFlow."
+    )
+
+    return {
+        "provider": LLM_PROVIDER,
+        "result": result
+    }
