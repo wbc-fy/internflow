@@ -1,4 +1,11 @@
-from app.config import LLM_PROVIDER, QWEN_API_KEY, QWEN_MODEL
+from openai import OpenAI
+
+from app.config import (
+    LLM_PROVIDER,
+    QWEN_API_KEY,
+    QWEN_MODEL,
+    QWEN_BASE_URL,
+)
 
 
 class LLMClient:
@@ -15,14 +22,32 @@ class NoLLMClient(LLMClient):
 
 
 class QwenClient(LLMClient):
-    def __init__(self, api_key: str, model: str):
-        self.api_key = api_key
+    def __init__(self, api_key: str, model: str, base_url: str):
+        if not api_key:
+            raise ValueError("QWEN_API_KEY is missing.")
+
         self.model = model
+        self.client = OpenAI(
+            api_key=api_key,
+            base_url=base_url,
+        )
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
-        raise NotImplementedError(
-            "Qwen client is prepared but not implemented yet."
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                },
+            ],
         )
+
+        return response.choices[0].message.content
 
 
 def get_llm_client() -> LLMClient:
@@ -32,6 +57,7 @@ def get_llm_client() -> LLMClient:
         return QwenClient(
             api_key=QWEN_API_KEY,
             model=QWEN_MODEL,
+            base_url=QWEN_BASE_URL,
         )
 
     return NoLLMClient()
