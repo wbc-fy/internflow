@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List,Optional
+from typing import Dict
 
 
 class AnalyzeRequest(BaseModel):
@@ -49,3 +50,10 @@ class AnalyzeAndSaveRequest(BaseModel):
 class AnalyzeAndSaveResponse(BaseModel):
     analysis: AnalyzeResponse
     application: ApplicationResponse
+
+
+
+class ApplicationStatsResponse(BaseModel):
+    total: int
+    average_match_score: float
+    status_counts: Dict[str, int]

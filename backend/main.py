@@ -1,4 +1,5 @@
 from typing import List
+from app.services.llm_client import get_llm_client
 from fastapi import FastAPI, HTTPException, Response
 from app.config import LLM_PROVIDER, OPENAI_API_KEY, ANTHROPIC_API_KEY
 from app.database import init_db
@@ -10,12 +11,15 @@ from app.models.schemas import (
     ApplicationResponse,
     AnalyzeAndSaveRequest,
     AnalyzeAndSaveResponse,
+    ApplicationStatsResponse,
 )
 from app.services.analyzer import analyze_application
 from app.services.application_service import (
     create_application,
     list_applications,
     update_application_status,
+    delete_application_by_id,
+    get_application_stats,
 )
 from app.services.application_service import (
     create_application,
@@ -48,6 +52,10 @@ def get_config():
 @app.post("/api/applications", response_model=ApplicationResponse)
 def add_application(data: ApplicationCreate):
     return create_application(data)
+
+@app.get("/api/applications/stats", response_model=ApplicationStatsResponse)
+def get_stats():
+    return get_application_stats()
 
 
 @app.get("/api/applications", response_model=List[ApplicationResponse])

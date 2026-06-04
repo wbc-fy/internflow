@@ -4,6 +4,7 @@ from app.models.schemas import (
     ApplicationCreate,
     ApplicationResponse,
     ApplicationStatusUpdate,
+    ApplicationStatsResponse,
 )
 def create_application(data: ApplicationCreate) -> ApplicationResponse:
     conn = get_connection()
@@ -99,3 +100,36 @@ def delete_application_by_id(application_id: int) -> bool:
     conn.close()
 
     return deleted_count > 0
+def get_application_stats() -> ApplicationStatsResponse:
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) AS total FROM applications")
+    total_row = cursor.fetchone()
+    total = total_row["total"]
+
+    cursor.execute("SELECT AVG(match_score) AS average_score FROM applications")
+    avg_row = cursor.fetchone()
+    average_score = avg_row["average_score"] or 0
+
+    cursor.execute(
+        """
+        SELECT status, COUNT(*) AS count
+        FROM applications
+        GROUP BY status
+        """
+    )
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    status_counts = {
+        row["status"]: row["count"]
+        for row in rows
+    }
+
+    return ApplicationStatsResponse(
+        total=total,
+        average_match_score=round(float(average_score), 1),
+        status_counts=status_counts,
+    )
