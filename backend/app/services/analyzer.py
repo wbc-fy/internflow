@@ -1,8 +1,12 @@
+import json
+
+from app.config import LLM_PROVIDER
 from app.models.schemas import AnalyzeRequest, AnalyzeResponse
+from app.services.llm_client import get_llm_client
 from app.services.skills import get_all_skills
 
 
-def analyze_application(data: AnalyzeRequest) -> AnalyzeResponse:
+def rule_based_analyze(data: AnalyzeRequest) -> AnalyzeResponse:
     jd_text = data.jd.lower()
     resume_text = data.resume.lower()
 
@@ -48,3 +52,63 @@ def analyze_application(data: AnalyzeRequest) -> AnalyzeResponse:
             "希望有机会进一步交流。谢谢！"
         ),
     )
+
+
+def clean_json_text(text: str) -> str:
+    text = text.strip()
+
+    if text.startswith("```json"):
+        text = text.removeprefix("```json").removesuffix("```").strip()
+    elif text.startswith("```"):
+        text = text.removeprefix("```").removesuffix("```").strip()
+
+    return text
+
+
+def llm_analyze(data: AnalyzeRequest) -> AnalyzeResponse:
+    client = get_llm_client()
+
+    system_prompt = """
+You are InternFlow, an AI internship application assistant.
+Analyze the job description and resume carefully.
+You must return only valid JSON.
+Do not include markdown.
+Do not include explanations outside JSON.
+"""
+
+    user_prompt = f"""
+Job Description:
+{data.jd}
+
+Resume:
+{data.resume}
+
+Return JSON with exactly these fields:
+{{
+  "position_summary": "string, summarize the internship role in Chinese",
+  "match_score": integer from 0 to 100,
+  "matched_skills": ["skill1", "skill2"],
+  "missing_skills": ["skill1", "skill2"],
+  "resume_suggestions": ["suggestion1", "suggestion2", "suggestion3"],
+  "email_draft": "Chinese application email draft"
+}}
+"""
+
+    result_text = client.generate(system_prompt, user_prompt)
+    json_text = clean_json_text(result_text)
+    result_data = json.loads(json_text)
+
+    return AnalyzeResponse(**result_data)
+
+
+def analyze_application(data: AnalyzeRequest) -> AnalyzeResponse:
+    rule_result = rule_based_analyze(data)
+
+    if LLM_PROVIDER.lower() == "none":
+        return rule_result
+
+    try:
+        return llm_analyze(data)
+    except Exception as e:
+        print(f"LLM analyze failed, fallback to rule-based analyze: {e}")
+        return rule_result
