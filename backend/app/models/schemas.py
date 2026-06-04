@@ -37,3 +37,15 @@ class ApplicationResponse(BaseModel):
 class ApplicationStatusUpdate(BaseModel):
     status: str
     notes: Optional[str] = None
+class AnalyzeAndSaveRequest(BaseModel):
+    company: str
+    position: str
+    jd: str
+    resume: str
+    status: str = "准备中"
+    notes: Optional[str] = None
+
+
+class AnalyzeAndSaveResponse(BaseModel):
+    analysis: AnalyzeResponse
+    application: ApplicationResponse

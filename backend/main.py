@@ -8,6 +8,8 @@ from app.models.schemas import (
     AnalyzeResponse,
     ApplicationCreate,
     ApplicationResponse,
+    AnalyzeAndSaveRequest,
+    AnalyzeAndSaveResponse,
 )
 from app.services.analyzer import analyze_application
 from app.services.application_service import (
@@ -67,3 +69,36 @@ def test_llm():
         "provider": LLM_PROVIDER,
         "result": result
     }
+@app.post("/api/analyze/save", response_model=AnalyzeAndSaveResponse)
+def analyze_and_save(data: AnalyzeAndSaveRequest):
+    analysis = analyze_application(
+        AnalyzeRequest(
+            jd=data.jd,
+            resume=data.resume,
+        )
+    )
+
+    if analysis.missing_skills:
+        missing_skill_text = "、".join(analysis.missing_skills)
+    else:
+        missing_skill_text = "暂无明显缺失技能"
+
+    if data.notes:
+        notes = data.notes
+    else:
+        notes = f"AI 分析：缺失技能：{missing_skill_text}"
+
+    application = create_application(
+        ApplicationCreate(
+            company=data.company,
+            position=data.position,
+            match_score=analysis.match_score,
+            status=data.status,
+            notes=notes,
+        )
+    )
+
+    return AnalyzeAndSaveResponse(
+        analysis=analysis,
+        application=application,
+    )
