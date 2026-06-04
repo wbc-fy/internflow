@@ -57,3 +57,20 @@ class ApplicationStatsResponse(BaseModel):
     total: int
     average_match_score: float
     status_counts: Dict[str, int]
+class InterviewPrepRequest(BaseModel):
+    company: str
+    position: str
+    jd: str
+    resume: str
+
+
+class InterviewQuestion(BaseModel):
+    category: str
+    question: str
+    answer_hint: str
+
+
+class InterviewPrepResponse(BaseModel):
+    self_introduction: str
+    key_focus: List[str]
+    questions: List[InterviewQuestion]

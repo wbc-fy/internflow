@@ -12,6 +12,8 @@ from app.models.schemas import (
     AnalyzeAndSaveRequest,
     AnalyzeAndSaveResponse,
     ApplicationStatsResponse,
+    InterviewPrepRequest,
+    InterviewPrepResponse,
 )
 from app.services.analyzer import analyze_application
 from app.services.application_service import (
@@ -21,6 +23,7 @@ from app.services.application_service import (
     delete_application_by_id,
     get_application_stats,
 )
+from app.services.interview_service import prepare_interview
 from app.services.application_service import (
     create_application,
     list_applications,
@@ -123,3 +126,6 @@ def delete_application(application_id: int):
         raise HTTPException(status_code=404, detail="Application not found")
 
     return Response(status_code=204)
+@app.post("/api/interview/prepare", response_model=InterviewPrepResponse)
+def prepare_interview_api(data: InterviewPrepRequest):
+    return prepare_interview(data)
