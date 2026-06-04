@@ -74,3 +74,8 @@ class InterviewPrepResponse(BaseModel):
     self_introduction: str
     key_focus: List[str]
     questions: List[InterviewQuestion]
+class ResumeExtractResponse(BaseModel):
+    filename: str
+    file_type: str
+    text: str
+    text_length: int
