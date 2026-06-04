@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from app.config import LLM_PROVIDER, OPENAI_API_KEY, ANTHROPIC_API_KEY
 from app.database import init_db
 from app.models.schemas import (
@@ -17,7 +17,12 @@ from app.services.application_service import (
     list_applications,
     update_application_status,
 )
-from app.services.llm_client import get_llm_client
+from app.services.application_service import (
+    create_application,
+    list_applications,
+    update_application_status,
+    delete_application_by_id,
+)
 app = FastAPI(title="InternFlow API")
 init_db()
 
@@ -102,3 +107,11 @@ def analyze_and_save(data: AnalyzeAndSaveRequest):
         analysis=analysis,
         application=application,
     )
+@app.delete("/api/applications/{application_id}", status_code=204)
+def delete_application(application_id: int):
+    success = delete_application_by_id(application_id)
+
+    if not success:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    return Response(status_code=204)

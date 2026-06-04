@@ -85,3 +85,17 @@ def update_application_status(
     conn.close()
 
     return ApplicationResponse(**dict(row))
+def delete_application_by_id(application_id: int) -> bool:
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM applications WHERE id = ?",
+        (application_id,),
+    )
+
+    conn.commit()
+    deleted_count = cursor.rowcount
+    conn.close()
+
+    return deleted_count > 0
